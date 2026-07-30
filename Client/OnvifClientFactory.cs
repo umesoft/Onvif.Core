@@ -64,10 +64,10 @@ public static class OnvifClientFactory
 		return device;
 	}
 
-	public static async Task<MediaClient> CreateMediaClientAsync(Uri uri, string username, string password)
+	public static async Task<MediaClient> CreateMediaClientAsync(string xAddress, string username, string password)
 	{
 		var binding = CreateBinding();
-		var device = await CreateDeviceClientAsync(uri, username, password).ConfigureAwait(false);
+		var device = await CreateDeviceClientAsync(new Uri(xAddress), username, password).ConfigureAwait(false);
 		var caps = await device.GetCapabilitiesAsync([CapabilityCategory.Media]).ConfigureAwait(false);
 		var media = new MediaClient(binding, new EndpointAddress(new Uri(caps.Capabilities.Media.XAddr)));
 
@@ -81,10 +81,10 @@ public static class OnvifClientFactory
 		return media;
 	}
 
-	public static async Task<PTZClient> CreatePTZClientAsync(Uri uri, string username, string password)
+	public static async Task<PTZClient> CreatePTZClientAsync(string xAddress, string username, string password)
 	{
 		var binding = CreateBinding();
-		var device = await CreateDeviceClientAsync(uri, username, password).ConfigureAwait(false);
+		var device = await CreateDeviceClientAsync(new Uri(xAddress), username, password).ConfigureAwait(false);
 		var caps = await device.GetCapabilitiesAsync([CapabilityCategory.PTZ]).ConfigureAwait(false);
 		var ptz = new PTZClient(binding, new EndpointAddress(new Uri(caps.Capabilities.PTZ.XAddr)));
 
@@ -98,10 +98,10 @@ public static class OnvifClientFactory
 		return ptz;
 	}
 
-	public static async Task<ImagingClient> CreateImagingClientAsync(Uri uri, string username, string password)
+	public static async Task<ImagingClient> CreateImagingClientAsync(string xAddress, string username, string password)
 	{
 		var binding = CreateBinding();
-		var device = await CreateDeviceClientAsync(uri, username, password).ConfigureAwait(false);
+		var device = await CreateDeviceClientAsync(new Uri(xAddress), username, password).ConfigureAwait(false);
 		var caps = await device.GetCapabilitiesAsync([CapabilityCategory.Imaging]).ConfigureAwait(false);
 		var imaging = new ImagingClient(binding, new EndpointAddress(new Uri(caps.Capabilities.Imaging.XAddr)));
 
