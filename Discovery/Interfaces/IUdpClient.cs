@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Onvif.Core.Discovery.Interfaces;
@@ -12,6 +13,8 @@ public interface IUdpClient : IDisposable
 {
     short Ttl { get; set; }
     Task<int> SendAsync(byte[] datagram, int bytes, IPEndPoint endPoint);
-    Task<UdpReceiveResult> ReceiveAsync();
+    Task<UdpReceiveResult?> ReceiveAsync(
+        TimeSpan timeout,
+        CancellationToken cancellationToken);
     void Close();
 }

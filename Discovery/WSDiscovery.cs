@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -19,63 +20,39 @@ namespace Onvif.Core.Discovery;
 
 public class WSDiscovery : IWSDiscovery
 {
-    /// <remarks>
-    /// This method uses 80 port.
-    /// </remarks>
-    public Task<IEnumerable<DiscoveryDevice>> Discover(int timeout,
+    public IAsyncEnumerable<DiscoveryDevice> Discover(IPAddress ipAddress, int port,
+	    TimeSpan timeout,
         CancellationToken cancellationToken = default)
     {
-        return Discover(timeout, new UdpClientWrapper(), cancellationToken);
+        return DiscoverProc(ipAddress, port, timeout, cancellationToken);
     }
 
-    public Task<IEnumerable<DiscoveryDevice>> Discover(int timeout, int port,
-       CancellationToken cancellationToken = default)
+    private async IAsyncEnumerable<DiscoveryDevice> DiscoverProc(IPAddress ipAddress, int port,
+    	TimeSpan timeout,
+        [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        return Discover(timeout, new UdpClientWrapper(port), cancellationToken);
-    }
+        using var client = new UdpClientWrapper(ipAddress, port);
 
-    public Task<IEnumerable<DiscoveryDevice>> Discover(int timeout, string ipAddress, int port,
-        CancellationToken cancellationToken = default)
-    {
-        return Discover(timeout, new UdpClientWrapper(ipAddress, port), cancellationToken);
-    }
-
-    public async Task<IEnumerable<DiscoveryDevice>> Discover(int Timeout, IUdpClient client,
-        CancellationToken cancellationToken = default)
-    {
-        var devices = new List<DiscoveryDevice>();
-        var responses = new List<UdpReceiveResult>();
         await SendProbe(client).ConfigureAwait(false);
-        bool isRunning;
-        try
+
+        while (true)
         {
-            isRunning = true;
-            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(Timeout));
-            while (isRunning)
+            var response = await client.ReceiveAsync(
+                timeout,
+                cancellationToken);
+            if (response == null)
             {
-                if (cts.IsCancellationRequested || cancellationToken.IsCancellationRequested)
+                yield break;
+            }
+
+            foreach (var device in ProcessResponse(response.Value))
+            {
+                if (device != null)
                 {
-                    break;
+                    yield return device;
                 }
-                var response = await client.ReceiveAsync().WithCancellation(cts.Token).WithCancellation(cancellationToken).ConfigureAwait(false);
-                responses.Add(response);
             }
         }
-        catch (OperationCanceledException)
-        {
-            isRunning = false;
-        }
-        finally
-        {
-            client.Close();
-            client.Dispose();
-        }
-        if (cancellationToken.IsCancellationRequested)
-        {
-            return devices;
-        }
-        devices.AddRange(ProcessResponses(responses));
-        return devices;
     }
 
     async Task SendProbe(IUdpClient client)
@@ -85,70 +62,64 @@ public class WSDiscovery : IWSDiscovery
         await client.SendAsync(message, message.Length, multicastEndpoint).ConfigureAwait(false);
     }
 
-    IEnumerable<DiscoveryDevice> ProcessResponses(IEnumerable<UdpReceiveResult> responses)
+    IEnumerable<DiscoveryDevice> ProcessResponse(UdpReceiveResult response)
     {
-        foreach (var response in responses)
+        var devices = new List<DiscoveryDevice>();
+        string strResponse = Encoding.UTF8.GetString(response.Buffer);
+        if (string.IsNullOrEmpty(strResponse))
         {
-            if (response.Buffer != null)
+            return devices;
+        }
+
+        try
+        {
+            XmlSerializer serializer = new(typeof(XmlProbeReponse));
+            XmlReaderSettings settings = new();
+            using StringReader textReader = new(strResponse);
+            using XmlReader xmlReader = XmlReader.Create(textReader, settings);
+            XmlProbeReponse xmlResponse = (XmlProbeReponse)serializer.Deserialize(xmlReader);
+
+            foreach (var probeMatch in xmlResponse.Body.ProbeMatches)
             {
-                string strResponse = Encoding.UTF8.GetString(response.Buffer);
-                if (strResponse == string.Empty)
-                    continue;
-                XmlProbeReponse xmlResponse = DeserializeResponse(strResponse);
-                foreach (var device in CreateDevices(xmlResponse, response.RemoteEndPoint))
+                try
                 {
-                    yield return device;
+                    ScopesParser.Parse(probeMatch.Scopes, out var name, out var model);
+
+                    var discoveryDevice = new DiscoveryDevice
+                    {
+                        EndpointReferenceAddress = probeMatch.EndpointReference?.Address,
+                        Address = response.RemoteEndPoint.Address,
+                        XAdresses = ConvertToList(probeMatch.XAddrs),
+                        Types = ConvertToList(probeMatch.Types),
+                        Model = model,
+                        Name = name
+                    };
+
+                    devices.Add(discoveryDevice);
+                }
+                catch (Exception ex)
+                {
+                    Debug.Fail(ex.ToString());
                 }
             }
         }
-    }
-
-    XmlProbeReponse DeserializeResponse(string xml)
-    {
-        XmlSerializer serializer = new(typeof(XmlProbeReponse));
-        XmlReaderSettings settings = new();
-        using StringReader textReader = new(xml);
-        using XmlReader xmlReader = XmlReader.Create(textReader, settings);
-        return (XmlProbeReponse)serializer.Deserialize(xmlReader);
-    }
-
-    IEnumerable<DiscoveryDevice> CreateDevices(XmlProbeReponse response, IPEndPoint remoteEndpoint)
-    {
-        DiscoveryDevice discoveryDevice;
-        foreach (var probeMatch in response.Body.ProbeMatches)
+        catch (Exception ex)
         {
-            discoveryDevice = null;
-            try
-            {
-                ScopesParser.Parse(probeMatch.Scopes, out var name, out var model);
-
-                discoveryDevice = new DiscoveryDevice
-                {
-                    EndpointReferenceAddress = probeMatch.EndpointReference?.Address,
-                    Address = remoteEndpoint.Address,
-                    XAdresses = ConvertToList(probeMatch.XAddrs),
-                    Types = ConvertToList(probeMatch.Types),
-                    Model = model,
-                    Name = name
-                };
-            }
-            catch (Exception ex)
-            {
-                Debug.Fail(ex.ToString());
-            }
-            if (discoveryDevice != null)
-            {
-                yield return discoveryDevice;
-            }
+            Debug.Fail(ex.ToString());
         }
+
+        return devices;
     }
 
-    IEnumerable<string> ConvertToList(string spacedListString)
+    private static IReadOnlyList<string> ConvertToList(string spacedListString)
     {
-        var strings = spacedListString.Split(null);
-        foreach (var str in strings)
+        if (string.IsNullOrWhiteSpace(spacedListString))
         {
-            yield return str.Trim();
+            return Array.Empty<string>();
         }
+
+        return spacedListString
+            .Split((char[])null, StringSplitOptions.RemoveEmptyEntries)
+            .ToList();
     }
 }

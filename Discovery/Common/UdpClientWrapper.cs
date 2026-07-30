@@ -4,6 +4,7 @@ using System;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Onvif.Core.Discovery.Common;
@@ -65,9 +66,28 @@ public class UdpClientWrapper : IUdpClient
         return await client.SendAsync(datagram, bytes, endPoint).ConfigureAwait(false);
     }
 
-    public async Task<UdpReceiveResult> ReceiveAsync()
+    public async Task<UdpReceiveResult?> ReceiveAsync(
+        TimeSpan timeout,
+        CancellationToken cancellationToken)
     {
-        return await client.ReceiveAsync().ConfigureAwait(false);
+        using var timeoutCts = new CancellationTokenSource(timeout);
+        using var linkedCts =
+            CancellationTokenSource.CreateLinkedTokenSource(
+                cancellationToken,
+                timeoutCts.Token);
+
+        try
+        {
+            return await client.ReceiveAsync(linkedCts.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            if (cancellationToken.IsCancellationRequested)
+            {
+                throw;
+            }
+            return null;
+        }
     }
 
     public void Close()
