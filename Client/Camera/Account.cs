@@ -4,15 +4,15 @@ using System;
 
 namespace Onvif.Core.Client.Camera;
 
-public class Account(string host, string userName, string password) : IEquatable<Account>
+public class Account(string xAdresses, string userName, string password) : IEquatable<Account>
 {
-    public string Host { get; } = host;
+    public string XAdresses { get; } = xAdresses;
     public string UserName { get; } = userName;
     public string Password { get; } = password;
 
     public bool Equals(Account other)
     {
-        return other != null && Host == other.Host && UserName == other.UserName && Password == other.Password;
+        return other != null && XAdresses == other.XAdresses && UserName == other.UserName && Password == other.Password;
     }
 
     public override bool Equals(object obj)
@@ -23,7 +23,7 @@ public class Account(string host, string userName, string password) : IEquatable
     public override int GetHashCode()
     {
         Fnv1aImpl fnv1 = new();
-        fnv1.AppendObj(Host)
+        fnv1.AppendObj(XAdresses)
             .AppendObj(UserName)
             .AppendObj(Password);
         return base.GetHashCode();
@@ -31,6 +31,6 @@ public class Account(string host, string userName, string password) : IEquatable
 
     public override string ToString()
     {
-        return $"{Host}:{UserName}:{Password}";
+        return $"{XAdresses}:{UserName}:{Password}";
     }
 }

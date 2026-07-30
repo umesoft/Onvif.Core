@@ -88,7 +88,7 @@ public class Camera(Account account)
     {
         get
         {
-            _ptz ??= OnvifClientFactory.CreatePTZClientAsync(Account.Host, Account.UserName, Account.Password).Result;
+            _ptz ??= OnvifClientFactory.CreatePTZClientAsync(new Uri(Account.XAdresses), Account.UserName, Account.Password).Result;
             return _ptz;
         }
     }
@@ -99,7 +99,7 @@ public class Camera(Account account)
     {
         get
         {
-            _media ??= OnvifClientFactory.CreateMediaClientAsync(Account.Host, Account.UserName, Account.Password).Result;
+            _media ??= OnvifClientFactory.CreateMediaClientAsync(new Uri(Account.XAdresses), Account.UserName, Account.Password).Result;
             return _media;
         }
     }
@@ -110,7 +110,7 @@ public class Camera(Account account)
     {
         get
         {
-            _imaging ??= OnvifClientFactory.CreateImagingClientAsync(Account.Host, Account.UserName, Account.Password).Result;
+            _imaging ??= OnvifClientFactory.CreateImagingClientAsync(new Uri(Account.XAdresses), Account.UserName, Account.Password).Result;
             return _imaging;
         }
     }
