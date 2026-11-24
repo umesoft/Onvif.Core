@@ -31,6 +31,39 @@ public partial class Capabilities
 
     [XmlIgnoreAttribute()]
     public bool WSPausableSubscriptionManagerInterfaceSupportSpecified { get; set; }
+
+    [XmlAttributeAttribute()]
+    public int MaxNotificationProducers { get; set; }
+
+    [XmlIgnoreAttribute()]
+    public bool MaxNotificationProducersSpecified { get; set; }
+
+    [XmlAttributeAttribute()]
+    public int MaxPullPoints { get; set; }
+
+    [XmlIgnoreAttribute()]
+    public bool MaxPullPointsSpecified { get; set; }
+
+    [XmlAttributeAttribute()]
+    public bool PersistentNotificationStorage { get; set; }
+
+    [XmlIgnoreAttribute()]
+    public bool PersistentNotificationStorageSpecified { get; set; }
+
+    [XmlAttributeAttribute()]
+    public string EventBrokerProtocols { get; set; }
+
+    [XmlAttributeAttribute()]
+    public int MaxEventBrokers { get; set; }
+
+    [XmlIgnoreAttribute()]
+    public bool MaxEventBrokersSpecified { get; set; }
+
+    [XmlAttributeAttribute()]
+    public bool MetadataOverMQTT { get; set; }
+
+    [XmlIgnoreAttribute()]
+    public bool MetadataOverMQTTSpecified { get; set; }
 }
 
 [GeneratedCodeAttribute("dotnet-svcutil", "1.0.3")]
@@ -116,6 +149,13 @@ public partial class NotificationMessage
 
 [GeneratedCodeAttribute("dotnet-svcutil", "1.0.3")]
 [DebuggerStepThroughAttribute()]
+[MessageContractAttribute(WrapperName = "GetEventProperties", WrapperNamespace = "http://www.onvif.org/ver10/events/wsdl", IsWrapped = true)]
+public partial class GetEventPropertiesRequest
+{
+}
+
+[GeneratedCodeAttribute("dotnet-svcutil", "1.0.3")]
+[DebuggerStepThroughAttribute()]
 [MessageContractAttribute(WrapperName = "GetEventPropertiesResponse", WrapperNamespace = "http://www.onvif.org/ver10/events/wsdl", IsWrapped = true)]
 public partial class GetEventPropertiesResponse
 {
@@ -123,14 +163,16 @@ public partial class GetEventPropertiesResponse
     [XmlElementAttribute("TopicNamespaceLocation")]
     public string[] TopicNamespaceLocation;
 
-    [MessageBodyMemberAttribute(Namespace = "http://www.onvif.org/ver10/events/wsdl", Order = 1)]
+    [MessageBodyMemberAttribute(Namespace = "http://docs.oasis-open.org/wsn/b-2", Order = 1)]
+    [XmlElementAttribute(Namespace = "http://docs.oasis-open.org/wsn/b-2")]
     public bool FixedTopicSet;
 
-    [MessageBodyMemberAttribute(Namespace = "http://www.onvif.org/ver10/events/wsdl", Order = 2)]
+    [MessageBodyMemberAttribute(Namespace = "http://docs.oasis-open.org/wsn/t-1", Order = 2)]
+    [XmlElementAttribute(Namespace = "http://docs.oasis-open.org/wsn/t-1")]
     public XElement TopicSet;
 
-    [MessageBodyMemberAttribute(Namespace = "http://www.onvif.org/ver10/events/wsdl", Order = 3)]
-    [XmlElementAttribute("TopicExpressionDialect")]
+    [MessageBodyMemberAttribute(Namespace = "http://docs.oasis-open.org/wsn/b-2", Order = 3)]
+    [XmlElementAttribute("TopicExpressionDialect", Namespace = "http://docs.oasis-open.org/wsn/b-2")]
     public string[] TopicExpressionDialect;
 
     [MessageBodyMemberAttribute(Namespace = "http://www.onvif.org/ver10/events/wsdl", Order = 4)]
@@ -169,12 +211,12 @@ public partial class CreatePullPointSubscriptionResponse
     [MessageBodyMemberAttribute(Namespace = "http://www.onvif.org/ver10/events/wsdl", Order = 0)]
     public EndpointReferenceType SubscriptionReference;
 
-    [MessageBodyMemberAttribute(Namespace = "http://www.onvif.org/ver10/events/wsdl", Order = 1)]
-    [XmlElementAttribute(DataType = "dateTime")]
+    [MessageBodyMemberAttribute(Namespace = "http://docs.oasis-open.org/wsn/b-2", Order = 1)]
+    [XmlElementAttribute(Namespace = "http://docs.oasis-open.org/wsn/b-2", DataType = "dateTime")]
     public System.DateTime CurrentTime;
 
-    [MessageBodyMemberAttribute(Namespace = "http://www.onvif.org/ver10/events/wsdl", Order = 2)]
-    [XmlElementAttribute(DataType = "dateTime")]
+    [MessageBodyMemberAttribute(Namespace = "http://docs.oasis-open.org/wsn/b-2", Order = 2)]
+    [XmlElementAttribute(Namespace = "http://docs.oasis-open.org/wsn/b-2", DataType = "dateTime")]
     public System.DateTime TerminationTime;
 }
 

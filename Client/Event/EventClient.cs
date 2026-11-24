@@ -21,7 +21,7 @@ public interface Event
 
     [OperationContractAttribute(Action = "http://www.onvif.org/ver10/events/wsdl/EventPortType/GetEventProperties", ReplyAction = "*")]
     [XmlSerializerFormatAttribute(SupportFaults = true)]
-    Task<GetEventPropertiesResponse> GetEventPropertiesAsync();
+    Task<GetEventPropertiesResponse> GetEventPropertiesAsync(GetEventPropertiesRequest request);
 
     [OperationContractAttribute(Action = "http://www.onvif.org/ver10/events/wsdl/EventPortType/CreatePullPointSubscription", ReplyAction = "*")]
     [XmlSerializerFormatAttribute(SupportFaults = true)]
@@ -75,7 +75,11 @@ public partial class EventClient : ClientBase<Event>, Event
 
     public Task<Capabilities> GetServiceCapabilitiesAsync() => base.Channel.GetServiceCapabilitiesAsync();
 
-    public Task<GetEventPropertiesResponse> GetEventPropertiesAsync() => base.Channel.GetEventPropertiesAsync();
+    public Task<GetEventPropertiesResponse> GetEventPropertiesAsync(GetEventPropertiesRequest request) =>
+        base.Channel.GetEventPropertiesAsync(request);
+
+    public Task<GetEventPropertiesResponse> GetEventPropertiesAsync() =>
+        base.Channel.GetEventPropertiesAsync(new GetEventPropertiesRequest());
 
     public Task<CreatePullPointSubscriptionResponse> CreatePullPointSubscriptionAsync(CreatePullPointSubscriptionRequest request) =>
         base.Channel.CreatePullPointSubscriptionAsync(request);
