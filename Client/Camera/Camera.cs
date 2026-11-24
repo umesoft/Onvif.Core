@@ -1,4 +1,5 @@
 ﻿using Onvif.Core.Client.Common;
+using Onvif.Core.Client.Event;
 using Onvif.Core.Client.Imaging;
 using Onvif.Core.Client.Media;
 using Onvif.Core.Client.Ptz;
@@ -82,7 +83,6 @@ public class Camera(Account account)
         }
     }
 
-
     private PTZClient _ptz;
     public PTZClient Ptz
     {
@@ -112,6 +112,16 @@ public class Camera(Account account)
         {
             _imaging ??= OnvifClientFactory.CreateImagingClientAsync(Account.XAdresses, Account.UserName, Account.Password).Result;
             return _imaging;
+        }
+    }
+
+    private EventClient _event;
+    public EventClient Event
+    {
+        get
+        {
+            _event ??= OnvifClientFactory.CreateEventClientAsync(Account.XAdresses, Account.UserName, Account.Password).Result;
+            return _event;
         }
     }
 

@@ -1,5 +1,6 @@
 ﻿using Onvif.Core.Client.Common;
 using Onvif.Core.Client.Device;
+using Onvif.Core.Client.Event;
 using Onvif.Core.Client.Imaging;
 using Onvif.Core.Client.Media;
 using Onvif.Core.Client.Ptz;
@@ -115,7 +116,24 @@ public static class OnvifClientFactory
 		return imaging;
 	}
 
-	public static async Task<TimeSpan> GetDeviceTimeShift(this DeviceClient device)
+    public static async Task<EventClient> CreateEventClientAsync(string xAddress, string username, string password)
+    {
+        var binding = CreateBinding();
+        var device = await CreateDeviceClientAsync(new Uri(xAddress), username, password).ConfigureAwait(false);
+        var caps = await device.GetCapabilitiesAsync([CapabilityCategory.Events]).ConfigureAwait(false);
+        var eventClient = new EventClient(binding, new EndpointAddress(new Uri(caps.Capabilities.Events.XAddr)));
+
+        var time_shift = await GetDeviceTimeShift(device).ConfigureAwait(false);
+        eventClient.ChannelFactory.Endpoint.EndpointBehaviors.Clear();
+        eventClient.ChannelFactory.Endpoint.EndpointBehaviors.Add(new SoapSecurityHeaderBehavior(username, password, time_shift));
+
+        // Connectivity Test
+        await eventClient.OpenAsync().ConfigureAwait(false);
+
+        return eventClient;
+    }
+
+    public static async Task<TimeSpan> GetDeviceTimeShift(this DeviceClient device)
 	{
 		var utc = (await device.GetSystemDateAndTimeAsync().ConfigureAwait(false)).UTCDateTime;
 		var dt = new System.DateTime(utc.Date.Year, utc.Date.Month, utc.Date.Day,
