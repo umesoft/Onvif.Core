@@ -20,7 +20,7 @@ public static class OnvifClientFactory
 		var binding = new CustomBinding();
 		var textBindingElement = new TextMessageEncodingBindingElement
 		{
-			MessageVersion = MessageVersion.CreateVersion(EnvelopeVersion.Soap12, AddressingVersion.None)
+			MessageVersion = MessageVersion.CreateVersion(EnvelopeVersion.Soap12, AddressingVersion.WSAddressing10)
 		};
 		var httpBindingElement = new HttpTransportBindingElement
 		{
